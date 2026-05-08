@@ -319,9 +319,9 @@ def calculate_match(resume, job):
 
     return round(score,2), matched[:10], missing[:10]
 
-# -------- RUN -------- #
+import os
 
 if __name__ == "__main__":
-    import os
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
-app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+# -------- RUN -------- #
