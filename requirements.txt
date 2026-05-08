@@ -2,3 +2,4 @@ flask
 pdfminer.six
 python-docx
 werkzeug
+reportlab
