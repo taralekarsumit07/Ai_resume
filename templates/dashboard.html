@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Resume Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<div class="overlay">
+
+    <!-- LOGOUT -->
+    <a href="/logout" style="float:right; margin:10px;">
+        <button>Logout</button>
+    </a>
+
+    <h1 class="title">AI Resume Analyzer</h1>
+    <p class="subtitle">AI-powered Resume Insights</p>
+
+    <!-- UPLOAD -->
+    <form method="POST" enctype="multipart/form-data" class="upload-box" id="uploadBox">
+        <input type="file" name="resume" required>
+        <textarea name="job" placeholder="Enter job description..."></textarea>
+        <button>Analyze Resume</button>
+    </form>
+
+    <!-- LOADER -->
+    <div id="loader" class="loader hidden"></div>
+
+    {% if score > 0 %}
+
+    <!-- DASHBOARD -->
+    <div class="dashboard fade-in">
+
+        <!-- SCORE -->
+        <div class="card glow">
+            <h2>Match Score</h2>
+
+            <div class="circle animate" style="--value: {{score}}">
+                <span id="scoreValue">0%</span>
+            </div>
+
+            <!-- ✅ DOWNLOAD FIX (IMPORTANT) -->
+            {% if history %}
+            <a href="/download/{{history[-1][0]}}">
+                <button style="margin-top:15px;">Download Report</button>
+            </a>
+            {% endif %}
+
+        </div>
+
+        <!-- DONUT -->
+        <div class="card glow">
+            <h2>Skill Analysis</h2>
+            <canvas id="pieChart"></canvas>
+        </div>
+
+    </div>
+
+    <!-- BAR CHART -->
+    <div class="card glow fade-in" style="width:60%; margin:auto; margin-top:30px;">
+        <h2>Skills Comparison</h2>
+        <canvas id="barChart"></canvas>
+    </div>
+
+    <!-- TAGS -->
+    <div class="skills fade-in">
+
+        <div>
+            <h3>Matched</h3>
+            {% for m in matched %}
+            <span class="tag green">{{m}}</span>
+            {% endfor %}
+        </div>
+
+        <div>
+            <h3>Missing</h3>
+
+            <div style="margin-top:15px;">
+                <h4>💡 Smart Suggestions</h4>
+                {% for m in missing %}
+                <p>👉 Improve {{m}}</p>
+                {% endfor %}
+            </div>
+
+            {% for m in missing %}
+            <span class="tag red">{{m}}</span>
+            {% endfor %}
+        </div>
+
+    </div>
+
+    {% endif %}
+
+    <!-- HISTORY -->
+    {% if history %}
+    <div class="card glow fade-in" style="width:85%; margin:auto; margin-top:30px;">
+        <h2>User Upload History</h2>
+
+        <table style="width:100%; border-collapse: collapse;">
+            <tr style="background: rgba(255,255,255,0.2);">
+                <th>Resume</th>
+                <th>Score</th>
+                <th>Matched</th>
+                <th>Missing</th>
+                <th>View</th>
+                <th>Download</th>
+            </tr>
+
+            {% for h in history %}
+            <tr style="text-align:center;">
+                <td>{{h[0]}}</td>
+                <td>{{h[1]}}%</td>
+                <td>{{h[2]}}</td>
+                <td>{{h[3]}}</td>
+
+                <td>
+                    <a href="/user_view/{{h[0]}}" target="_blank">
+                        <button>Open PDF</button>
+                    </a>
+                </td>
+
+                <!-- ✅ DOWNLOAD PER FILE -->
+                <td>
+                    <a href="/download/{{h[0]}}">
+                        <button>Download</button>
+                    </a>
+                </td>
+
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- 🔥 MODAL -->
+<div id="skillModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center;">
+
+    <div style="background:white; color:black; padding:25px; border-radius:12px; width:400px; max-height:80%; overflow-y:auto;">
+        <h2 id="modalTitle"></h2>
+        <hr>
+        <div id="modalContent"></div>
+        <button onclick="closeModal()" style="margin-top:15px;">Close</button>
+    </div>
+
+</div>
+
+<script>
+
+// DATA
+var matchedSkills = {{ matched|tojson if matched else [] }};
+var missingSkills = {{ missing|tojson if missing else [] }};
+
+var matched = matchedSkills.length;
+var missing = missingSkills.length;
+var finalScore = {{ score if score else 0 }};
+
+// SCORE ANIMATION
+let current = 0;
+let counter = setInterval(() => {
+    if(current >= finalScore){
+        clearInterval(counter);
+    } else {
+        current++;
+        document.getElementById("scoreValue").innerText = current + "%";
+    }
+}, 20);
+
+// DONUT CHART
+var chart = new Chart(document.getElementById("pieChart"), {
+    type: "doughnut",
+    data: {
+        labels: ["Matched Skills", "Missing Skills"],
+        datasets: [{
+            data: [matched, missing],
+            backgroundColor: ["#00ffcc", "#ff4d4d"],
+            hoverOffset: 20
+        }]
+    },
+    options: {
+        cutout: "65%",
+        plugins: {
+            legend: { labels: { color: "white" }},
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        if(context.dataIndex === 0){
+                            return "Matched (" + matched + "): " + matchedSkills.join(", ");
+                        } else {
+                            return "Missing (" + missing + "): " + missingSkills.join(", ");
+                        }
+                    }
+                }
+            }
+        }
+    }
+});
+
+// CLICK DONUT → MODAL
+document.getElementById("pieChart").onclick = function(evt) {
+    const points = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+
+    if(points.length){
+        const index = points[0].index;
+
+        if(index === 0){
+            showModal("✅ Matched Skills", matchedSkills);
+        } else {
+            showModal("❌ Missing Skills", missingSkills);
+        }
+    }
+};
+
+// MODAL
+function showModal(title, skills){
+    document.getElementById("skillModal").style.display = "flex";
+    document.getElementById("modalTitle").innerText = title;
+
+    let html = "";
+    if(skills.length === 0){
+        html = "<p>No data available</p>";
+    } else {
+        skills.forEach(s => {
+            html += "<p>👉 " + s + "</p>";
+        });
+    }
+
+    document.getElementById("modalContent").innerHTML = html;
+}
+
+function closeModal(){
+    document.getElementById("skillModal").style.display = "none";
+}
+
+// BAR CHART
+new Chart(document.getElementById("barChart"), {
+    type: "bar",
+    data: {
+        labels: ["Matched", "Missing"],
+        datasets: [{
+            label: "Skills Count",
+            data: [matched, missing],
+            backgroundColor: ["#00ffcc", "#ff4d4d"]
+        }]
+    },
+    options: {
+        plugins: { legend: { labels: { color: "white" }}},
+        scales: {
+            x: { ticks: { color: "white" }},
+            y: { ticks: { color: "white" }}
+        }
+    }
+});
+
+// LOADER
+document.getElementById("uploadBox").addEventListener("submit", function(){
+    document.getElementById("loader").classList.remove("hidden");
+});
+
+</script>
+
+</body>
+</html>

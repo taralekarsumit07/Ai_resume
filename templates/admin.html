@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Panel</title>
+<link rel="stylesheet" href="/static/style.css">
+
+<style>
+body.bg {
+    background: linear-gradient(135deg,#141e30,#243b55);
+    color: white;
+    font-family: Arial;
+}
+
+.container {
+    width: 90%;
+    margin: auto;
+    margin-top: 40px;
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+/* Table Style */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+th {
+    background: rgba(0,0,0,0.4);
+}
+
+/* Button */
+.view-btn {
+    padding: 6px 12px;
+    background: #00c6ff;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.view-btn:hover {
+    box-shadow: 0 0 10px #00c6ff;
+}
+</style>
+
+</head>
+
+<body class="bg">
+
+<div class="container">
+
+<!-- ✅ LOGOUT BUTTON -->
+<a href="/logout" style="float:right;">
+    <button class="view-btn">Logout</button>
+</a>
+
+<h1>Admin Panel</h1>
+
+<table>
+<tr>
+<th>Email</th>
+<th>Resume</th>
+<th>Score</th>
+<th>Matched Skills</th>
+<th>Missing Skills</th>
+</tr>
+
+{% for row in data %}
+<tr>
+<td>{{row[0]}}</td>
+
+<!-- CLICKABLE PDF -->
+<td>
+    <a href="/view/{{row[1]}}" target="_blank">
+        <button class="view-btn">View</button>
+    </a>
+</td>
+
+<td>{{row[2]}}%</td>
+<td>{{row[3]}}</td>
+<td>{{row[4]}}</td>
+
+</tr>
+{% endfor %}
+
+</table>
+
+</div>
+
+</body>
+</html>

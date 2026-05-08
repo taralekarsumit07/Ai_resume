@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Register</title>
+
+<style>
+body{
+    font-family:Arial;
+    background: linear-gradient(135deg,#1f4037,#99f2c8);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.box{
+    width:320px;
+    padding:25px;
+    background:rgba(255,255,255,0.2);
+    backdrop-filter: blur(15px);
+    border-radius:10px;
+    box-shadow:0 0 20px rgba(0,0,0,0.3);
+}
+
+h2{text-align:center;color:white;}
+
+input{
+    width:100%;
+    padding:10px;
+    margin:10px 0;
+    border:none;
+    border-radius:5px;
+}
+
+button{
+    width:100%;
+    padding:10px;
+    background:#00c6ff;
+    color:white;
+    border:none;
+    border-radius:5px;
+}
+
+a{
+    color:white;
+    display:block;
+    text-align:center;
+    margin-top:10px;
+}
+</style>
+
+<script>
+function validateRegister(){
+    var email=document.getElementById("email").value;
+    var pass=document.getElementById("pass").value;
+
+    if(email==""){
+        alert("Enter Email");
+        return false;
+    }
+
+    if(pass.length<4){
+        alert("Password must be at least 4 characters");
+        return false;
+    }
+
+    return true;
+}
+</script>
+
+</head>
+
+<body>
+
+<div class="box">
+<h2>Register</h2>
+
+<form method="POST" action="/register" onsubmit="return validateRegister()">
+<input type="text" id="email" name="email" placeholder="Email">
+<input type="password" id="pass" name="password" placeholder="Password">
+<button type="submit">Register</button>
+</form>
+
+<a href="/">Back to Login</a>
+
+</div>
+
+</body>
+</html>
